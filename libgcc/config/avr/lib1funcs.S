@@ -1127,6 +1127,7 @@ DEFUN __umulsidi3
     ;; FALLTHRU
 ENDF  __umulsidi3
     ;; T = sign (A)
+#define ZERO r2
 DEFUN __umulsidi3_helper
     push    r29  $  push    r28 // Y
     push    ZERO
@@ -1240,7 +1241,7 @@ DEFUN __umulsidi3_helper
     ret
 ENDF __umulsidi3_helper
 #endif /* L_umulsidi3 */
-
+#undef ZERO
 
 #if defined (L_mulsidi3)
 
