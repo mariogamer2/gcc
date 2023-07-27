@@ -1128,53 +1128,115 @@ DEFUN __umulsidi3
 ENDF  __umulsidi3
     ;; T = sign (A)
 DEFUN __umulsidi3_helper
-    push    29  $  push    28 ; Y
-    wmov    30, A2
-    ;; Counting in Words, we have to perform 4 Multiplications
-    ;; 0 * 0
-    wmov    26, A0
-    XCALL __umulhisi3
-    push    23  $  push    22 ; C0
-    wmov    28, B0
-    wmov    18, B2
-    wmov    C2, 24
-    push    27  $  push    26 ; A0
-    push    19  $  push    18 ; B2
-    ;;
-    ;;  18  20  22  24  26  28  30  |  B2, B3, A0, A1, C0, C1, Y
-    ;;  B2  C2  --  --  --  B0  A2
-    ;; 1 * 1
-    wmov    26, 30      ; A2
-    XCALL __umulhisi3
-    ;; Sign-extend A.  T holds the sign of A
-    brtc    0f
-    ;; Subtract B from the high part of the result
-    sub     22, 28
-    sbc     23, 29
-    sbc     24, 18
-    sbc     25, 19
-0:  wmov    18, 28      ;; B0
-    wmov    C4, 22
-    wmov    C6, 24
-    ;;
-    ;;  18  20  22  24  26  28  30  |  B2, B3, A0, A1, C0, C1, Y
-    ;;  B0  C2  --  --  A2  C4  C6
-    ;;
-    ;; 1 * 0
-    XCALL __muldi3_6
-    ;; 0 * 1
-    pop     26  $   pop 27  ;; B2
-    pop     18  $   pop 19  ;; A0
-    XCALL __muldi3_6
+    push    r29  $  push    r28 // Y
+    push    ZERO
+    clr     ZERO
+    wmov    r30, A2
+    // Counting in Words, we have to perform 4 Multiplications
+    // 0 * 0
+    wmov    r26, A0
+    
+    mul     r26, r18
+    wmov    r22, r0
+    mul     r27, r19
+    wmov    r24, r0
+    mul     r26, r19
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+    mul     r27, r18
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
 
-    ;; Move result C into place and save A0 in Z
-    wmov    22, C4
-    wmov    24, C6
-    wmov    30, 18 ; A0
+    push    r23  $  push    r22 // C0
+    wmov    r28, B0
+    wmov    r18, B2
+    wmov    C2, r24
+    push    r27  $  push    r26 // A0
+    push    r19  $  push    r18 // B2
+    
+    //  18  20  22  24  26  28  30  |  B2, B3, A0, A1, C0, C1, Y
+    //  B2  C2  --  --  --  B0  A2
+    // 1 * 1
+    wmov    r26, r30      // A2
+    
+    mul     r26, r18
+    wmov    r22, r0
+    mul     r27, r19
+    wmov    r24, r0
+    mul     r26, r19
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+    mul     r27, r18
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+
+    wmov    r18, r28      // B0
+    wmov    C4, r22
+    wmov    C6, r24
+    
+    //  18  20  22  24  26  28  30  |  B2, B3, A0, A1, C0, C1, Y
+    //  B0  C2  --  --  A2  C4  C6
+    //
+    // 1 * 0
+
+    mul     r26, r18
+    wmov    r22, r0
+    mul     r27, r19
+    wmov    r24, r0
+    mul     r26, r19
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+    mul     r27, r18
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+
+    add     C2, r22
+    adc     C3, r23
+    adc     C4, r24
+    adc     C5, r25
+    brcc    0f
+    adiw    C6, 1
+0:
+    // 0 * 1
+    pop     r26  $   pop r27  // B2
+    pop     r18  $   pop r19  // A0
+    
+    mul     r26, r18
+    wmov    r22, r0
+    mul     r27, r19
+    wmov    r24, r0
+    mul     r26, r19
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+    mul     r27, r18
+    add     r23, r0
+    adc     r24, r1
+    adc     r25, ZERO
+
+    add     C2, r22
+    adc     C3, r23
+    adc     C4, r24
+    adc     C5, r25
+    brcc    1f
+    adiw    C6, 1
+1:
+	// Move result C into place and save A0 in Z
+    wmov    r22, C4
+    wmov    r24, C6
+    wmov    r30, r18 // A0
     pop     C0  $   pop C1
 
-    ;; Epilogue
-    pop     28  $   pop 29  ;; Y
+    // Epilogue
+    clr	    __zero_reg__
+    pop	    ZERO
+    pop     r28  $   pop r29  // Y
     ret
 ENDF __umulsidi3_helper
 #endif /* L_umulsidi3 */
